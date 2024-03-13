@@ -14,10 +14,10 @@ public class GameWindow extends JFrame {
     // создвание кнопок
     JButton btnStart = new JButton("New Game");
     JButton btnExit = new JButton("Exit");
-    Map map;
-    SettingWindow settings;
+    Map map; // Лучше бы дать приватный доступ
+    SettingWindow settings; // аналогично, лучше приватный доступ
 
-    GameWindow() {
+    public GameWindow() { // Дописал публичный доступ к методу
         // конструктор создающий основное  окно
         setDefaultCloseOperation(EXIT_ON_CLOSE); // определяет действие по нажатию на крестик
         setLocation(WINDOW_POSX, WINDOW_POSY);
