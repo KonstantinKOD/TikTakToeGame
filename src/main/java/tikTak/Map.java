@@ -8,28 +8,26 @@ import java.util.Random;
 
 // Игровое поле
 public class Map extends JPanel {
-    private int panelWidth; // высота поля
-    private int panelHeight; // ширина поля
-    private int cellHeight; // Высота ячейки
-    private int cellWidth; // Ширина ячейки
+    private int panelWidth, panelHeight, cellHeight, cellWidth; // высота ширина панели, высота ширина ячейки поля
     private static final Random RANDOM = new Random(); // Для выбора случайной ячейки ИИ
     private final int HUMAN_DOT = 1; // число для игрока
     private final int AI_DOT = 2; // число для ИИ
     private final int EMPTY_DOT = 0; // пустая ячейка
     private int fieldSizeY = 3; // колличество ячеек по Х
     private int fieldSizeX = 3; // колличество ячеек по Y
-    private char[][] field; // двумерный массив для поля
-    private static final int DOT_PADDING = 5; // Отступ от края ячейки для фигуры
+    private char[][] field; // двумерный массив игрового поля, вставляются читла 1, 2, 0 (HUMAN_DOT, AI_DOT, EMPTY_DOT)
+    private static final int DOT_PADDING = 10; // Отступ от края ячейки для фигуры
     private int gameOverType;
-    private static final int STATE_DRAW = 0;
-    private static final int STATE_WIN_HUMAN = 1;
-    private static final int STATE_WIN_AI = 2;
+    // статусы игры
+    private static final int STATE_GAME = 0; // игра идет
+    private static final int STATE_WIN_HUMAN = 1; // победил
+    private static final int STATE_WIN_AI = 2; // победил комп
 
     private static final String MSG_WIN_HUMAN = "Победил игрок!";
     private static final String MSG_WIN_AI = "Пробедил компьютер!";
     private static final String MSG_DRAW = "Ничья";
-    private boolean isGameOver;
-    private boolean isInitialized;
+    private boolean isGameOver; // завершина ли игра
+    private boolean isInitialized; // инициализированно ли поле, или еще идет ли игра
 
     // инициализация игрового поля
     private void initMap() {
@@ -48,6 +46,7 @@ public class Map extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
+                // можно добавить if (gameWork(флаг работает ли игра(еще нужна переменная "gameWork")))
                 update(e);
             }
         });
@@ -55,31 +54,31 @@ public class Map extends JPanel {
     }
 
     // метод для проставки символа
-    private void update(MouseEvent e) {
+    private void update(MouseEvent e) { // метод определения где был щелчек мышью
         if (isGameOver || !isInitialized) return;
-        int cellX = e.getX() / cellWidth;
-        int cellY = e.getY() / cellHeight;
-        if (!isValidCell(cellX, cellY) || !isEmptyCell(cellX, cellY)) return;
-        field[cellY][cellX] = HUMAN_DOT;
-        System.out.printf("\nx=%d, y=%d\n", cellX, cellY);
+        int cellX = e.getX() / cellWidth; // координаты щелчка мыши по Х
+        int cellY = e.getY() / cellHeight; // координаты щелчка мыши по Y
+        if (!isValidCell(cellX, cellY) || !isEmptyCell(cellX, cellY)) return; // проверка попал ли щелчек в ячейку
+        field[cellY][cellX] = HUMAN_DOT; // если все хорошо записываем как ход игрока
+        System.out.printf(" x=%d, y=%d\n", cellX, cellY);
 
         repaint();
 
-        if (checkEndGame(HUMAN_DOT, STATE_WIN_HUMAN)) return;
-        aiTurn();
+        if (checkEndGame(HUMAN_DOT, STATE_WIN_HUMAN)) return; // проверка не привел ли ход к окончанию игры
+//        aiTurn();
         repaint();
         if (checkEndGame(AI_DOT, STATE_WIN_AI)) return;
     }
 
     private boolean checkEndGame(int dot, int gameOverType) {
-        if (checkWin((char) dot)){
+        if (checkWin((char) dot)) {
             this.gameOverType = gameOverType;
             isGameOver = true;
             repaint();
             return true;
         }
-        if (isMapFull()){
-            this.gameOverType = STATE_DRAW;
+        if (isMapFull()) {
+            this.gameOverType = STATE_GAME;
             isGameOver = true;
             repaint();
             return true;
@@ -89,14 +88,16 @@ public class Map extends JPanel {
 
     // Метод начинающий игру с компьютером
     void satrtNewGame(int mode, int fSzX, int fSzY, int wLen) {
-        System.out.printf("Mode: %d;\nSize: x=%d, y=%d;\nWin Length: %d",
+        System.out.printf("Mode: %d;\nSize: x=%d, y=%d;\nWin Length: %d\n",
                 mode, fSzX, fSzY, wLen);
         initMap();
         isGameOver = false;
-        isInitialized = true;
-        repaint();
+        isInitialized = true; // инициализированно ли поле, или еще идет ли игра
+        repaint(); // метод перерисовки виджитов(в данном случа поля)
     }
 
+    // метод repaint вызывает этот метод при новой игре
+    // необходимо переопределять именно здесь отрисовку, передавая "Graphics g"
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -129,17 +130,17 @@ public class Map extends JPanel {
                 // Цвет и фигура хода игрока
                 if (field[y][x] == HUMAN_DOT) {
                     g.setColor(Color.BLUE);
-                    g.fillOval(x * cellWidth + DOT_PADDING,
-                            y * cellHeight + DOT_PADDING * 2,
-                            cellWidth - DOT_PADDING * 2,
-                            cellHeight - DOT_PADDING * 2);
+                    g.fillOval(x * cellWidth + DOT_PADDING + 15, // g.fillOval отвечает за фигуру
+                            y * cellHeight + DOT_PADDING + 15,
+                            cellWidth - DOT_PADDING * 5,
+                            cellHeight - DOT_PADDING * 5);
                     // Цвет и фигура хода ИИ
                 } else if (field[y][x] == AI_DOT) {
-                    g.setColor(new Color(0xff0000));
-                    g.fillOval(x * cellWidth + DOT_PADDING,
-                            y * cellHeight + DOT_PADDING * 2,
-                            cellWidth - DOT_PADDING * 2,
-                            cellHeight - DOT_PADDING * 2);
+                    g.setColor(Color.RED);
+                    g.fillOval(x * cellWidth + DOT_PADDING + 15, // g.fillOval отвечает за фигуру
+                            y * cellHeight + DOT_PADDING + 15,
+                            cellWidth - DOT_PADDING * 5,
+                            cellHeight - DOT_PADDING * 5);
                 } else {
                     throw new RuntimeException("Unexpected value " + field[y][x] +
                             " in cell: x=" + x + " y=" + y);
@@ -149,18 +150,21 @@ public class Map extends JPanel {
         if (isGameOver) showMessageGameOver(g);
     }
 
-    private void showMessageGameOver(Graphics g){
+    private void showMessageGameOver(Graphics g) {
         g.setColor(Color.DARK_GRAY);
         g.fillRect(0, 200, getWidth(), 70);
         g.setColor(Color.YELLOW);
         g.setFont(new Font("Times new roman", Font.BOLD, 48));
         switch (gameOverType) {
-            case STATE_DRAW:
-                g.drawString(MSG_DRAW, 180, getHeight() / 2); break;
+            case STATE_GAME:
+                g.drawString(MSG_DRAW, 180, getHeight() / 2);
+                break;
             case STATE_WIN_AI:
-                g.drawString(MSG_WIN_AI, 20, getHeight() / 2); break;
+                g.drawString(MSG_WIN_AI, 20, getHeight() / 2);
+                break;
             case STATE_WIN_HUMAN:
-                g.drawString(MSG_WIN_HUMAN, 70, getHeight() / 2); break;
+                g.drawString(MSG_WIN_HUMAN, 70, getHeight() / 2);
+                break;
             default:
                 throw new RuntimeException("Unexpected gameOver state " + gameOverType);
         }
@@ -177,37 +181,52 @@ public class Map extends JPanel {
     }
 
     // Простая логика ИИ
-    private void aiTurn() {
-        int x, y;
-        do {
-            x = RANDOM.nextInt(fieldSizeX);
-            y = RANDOM.nextInt(fieldSizeY);
-        } while (!isEmptyCell(x, y));
-        field[y][x] = AI_DOT;
+//    private void aiTurn() {
+//        int x, y;
+//        do {
+//            x = RANDOM.nextInt(fieldSizeX);
+//            y = RANDOM.nextInt(fieldSizeY);
+//        } while (!isEmptyCell(x, y));
+//        field[y][x] = AI_DOT;
+//    }
+
+    private boolean checkWin(char dot) {
+        for (int i = 0; i < fieldSizeX; i++) {
+            for (int j = 0; j < fieldSizeY; j++) {
+                if (checkLine(i, j, 1, 0, ))
+            }
+        }
+
+//        if (field[0][0] == dot && field[0][1] == dot && field[0][2] == dot) return true;
+//        if (field[1][0] == dot && field[1][1] == dot && field[1][2] == dot) return true;
+//        if (field[2][0] == dot && field[2][1] == dot && field[2][2] == dot) return true;
+//
+//        if (field[0][0] == dot && field[1][0] == dot && field[2][0] == dot) return true;
+//        if (field[0][1] == dot && field[1][1] == dot && field[2][1] == dot) return true;
+//        if (field[0][2] == dot && field[1][2] == dot && field[2][2] == dot) return true;
+//
+//        if (field[0][0] == dot && field[1][1] == dot && field[2][2] == dot) return true;
+//        if (field[0][2] == dot && field[1][1] == dot && field[2][0] == dot) return true;
+        return false;
     }
 
-    private boolean checkWin(char c){
-
-        if (field[0][0]==c&&field[0][1]==c&&field[0][2]==c) return true;
-        if (field[1][0]==c&&field[1][1]==c&&field[1][2]==c) return true;
-        if (field[2][0]==c&&field[2][1]==c&&field[2][2]==c) return true;
-
-        if (field[0][0]==c&&field[1][0]==c&&field[2][0]==c) return true;
-        if (field[0][1]==c&&field[1][1]==c&&field[2][1]==c) return true;
-        if (field[0][2]==c&&field[1][2]==c&&field[2][2]==c) return true;
-
-        if (field[0][0]==c&&field[1][1]==c&&field[2][2]==c) return true;
-        if (field[0][2]==c&&field[1][1]==c&&field[2][0]==c) return true;
-        return false;
+    private boolean checkLine(int x, int y, int vx, int vy, int len, char dot) {
+        final int far_x = x + (len - 1) * vx;
+        final int far_y = y + (len - 1) * vy;
+        if (!isValidCell(far_x, far_y)) return false;
+        for (int i = 0; i < len; i++) {
+            if (field[y + i * vy][x + i * vx] != dot) return false;
+        }
+        return true;
     }
 
     // Проверка на ничью
     private boolean isMapFull() {
         for (int i = 0; i < fieldSizeY; i++) {
             for (int j = 0; j < fieldSizeX; j++) {
-                if (field[i][j] == EMPTY_DOT) return false;
+                if (field[i][j] == EMPTY_DOT) return false; // если хоть одна ячейка пустая, вернет false
             }
         }
-        return true;
+        return true; // если не false возврат true
     }
 }

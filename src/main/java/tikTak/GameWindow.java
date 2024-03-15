@@ -24,9 +24,9 @@ public class GameWindow extends JFrame {
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setTitle("TicTakToe"); // добавляет название
         setResizable(false); // запрет на изменение размеров
+        //setLocationRelativeTo(null); // не привязывает обьект к чему либо, вызывает обьект по середине экрана
 
         map = new Map(); // создание поля для игры
-
 
         /*
         обьявление окна настроек
@@ -34,25 +34,24 @@ public class GameWindow extends JFrame {
          */
         settings = new SettingWindow(this);
 
-
         // добавление слушателей кнопок
         btnExit.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) { // вызывает метод дейстивий по клику кнопок
                 System.exit(0);// закрытие по нажанию exit
             }
         });
         btnStart.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) { // вызывает метод дейстивий по клику кнопок
                 settings.setVisible(true);// открытие окна настроек по клику New game
             }
         });
 
-        settings.setVisible(true);
+        //settings.setVisible(true); //делает окно видимым при запуске основного окна
 
         // В компановщикем BorderLayout размещаем панель с 2-мя кнопками
-        JPanel panBotton = new JPanel(new GridLayout(1, 2)); // создание панели для кнопок (первая, вторая)
+        JPanel panBotton = new JPanel(new GridLayout(1, 2)); // создание панели для кнопок (строки, колонки)
         // добавление кнопок в панель
         panBotton.add(btnStart);
         panBotton.add(btnExit);
@@ -62,7 +61,7 @@ public class GameWindow extends JFrame {
         setVisible(true); // делает окно видимым
     }
 
-    // метод начала новой игры
+    // метод начала новой игры(вызывает окно настроек)
     void startNewGame(int mode, int fSzX, int fSzY, int wLen) {
         map.satrtNewGame(mode, fSzX, fSzY, wLen);
     }
