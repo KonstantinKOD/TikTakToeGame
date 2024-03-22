@@ -13,8 +13,8 @@ public class Map extends JPanel {
     private final int HUMAN_DOT = 1; // число для игрока
     private final int AI_DOT = 2; // число для ИИ
     private final int EMPTY_DOT = 0; // пустая ячейка
-    private int fieldSizeY = 3; // колличество ячеек по Х
-    private int fieldSizeX = 3; // колличество ячеек по Y
+    private int fieldSizeY; // колличество ячеек по Х
+    private int fieldSizeX; // колличество ячеек по Y
     private char[][] field; // двумерный массив игрового поля, вставляются читла 1, 2, 0 (HUMAN_DOT, AI_DOT, EMPTY_DOT)
     private static final int DOT_PADDING = 10; // Отступ от края ячейки для фигуры
     private int gameOverType;
@@ -28,11 +28,10 @@ public class Map extends JPanel {
     private static final String MSG_DRAW = "Ничья";
     private boolean isGameOver; // завершина ли игра
     private boolean isInitialized; // инициализированно ли поле, или еще идет ли игра
+    private int winLen;
 
     // инициализация игрового поля
     private void initMap() {
-        fieldSizeY = 3;
-        fieldSizeX = 3;
         field = new char[fieldSizeY][fieldSizeX];
         for (int i = 0; i < fieldSizeY; i++) {
             for (int j = 0; j < fieldSizeX; j++) {
@@ -41,7 +40,7 @@ public class Map extends JPanel {
         }
     }
 
-    Map() {
+    public Map() {
         // переопределение для того чтоб отрисовка производилась когда отпускаешь мышку
         addMouseListener(new MouseAdapter() {
             @Override
@@ -65,7 +64,7 @@ public class Map extends JPanel {
         repaint();
 
         if (checkEndGame(HUMAN_DOT, STATE_WIN_HUMAN)) return; // проверка не привел ли ход к окончанию игры
-//        aiTurn();
+        aiTurn();
         repaint();
         if (checkEndGame(AI_DOT, STATE_WIN_AI)) return;
     }
@@ -87,7 +86,10 @@ public class Map extends JPanel {
     }
 
     // Метод начинающий игру с компьютером
-    void satrtNewGame(int mode, int fSzX, int fSzY, int wLen) {
+    void startNewGame(int mode, int fSzX, int fSzY, int wLen) {
+        this.winLen = wLen;
+        this.fieldSizeX = fSzX;
+        this.fieldSizeY = fSzY;
         System.out.printf("Mode: %d;\nSize: x=%d, y=%d;\nWin Length: %d\n",
                 mode, fSzX, fSzY, wLen);
         initMap();
@@ -110,16 +112,16 @@ public class Map extends JPanel {
         panelWidth = getWidth();
         panelHeight = getHeight();
         // высоту и ширину делим на 3, получаем 9 ячеек
-        cellHeight = panelHeight / 3;
-        cellWidth = panelWidth / 3;
+        cellHeight = panelHeight / fieldSizeX;
+        cellWidth = panelWidth / fieldSizeY;
 
-        // рисуем клетки 3х3
+        // рисуем клетки
         g.setColor(Color.BLACK);
-        for (int h = 0; h < 3; h++) {
+        for (int h = 0; h < fieldSizeY; h++) {
             int y = h * cellHeight;
-            g.drawLine(0, y, panelWidth, y);
+            g.drawLine(0, y, panelWidth, y); // .drawline отрисовывает графику
         }
-        for (int w = 0; w < 3; w++) {
+        for (int w = 0; w < fieldSizeX; w++) {
             int x = w * cellWidth;
             g.drawLine(x, 0, x, panelHeight);
         }
@@ -130,10 +132,12 @@ public class Map extends JPanel {
                 // Цвет и фигура хода игрока
                 if (field[y][x] == HUMAN_DOT) {
                     g.setColor(Color.BLUE);
-                    g.fillOval(x * cellWidth + DOT_PADDING + 15, // g.fillOval отвечает за фигуру
-                            y * cellHeight + DOT_PADDING + 15,
-                            cellWidth - DOT_PADDING * 5,
-                            cellHeight - DOT_PADDING * 5);
+                    drawCross(g, x, y);
+//                    g.fillRect(x * cellWidth + DOT_PADDING + 15, // g.fillOval отвечает за фигуру (g.fill(нужно прописать нужную))
+//                            y * cellHeight + DOT_PADDING + 15,
+//                            cellWidth - DOT_PADDING * 5,
+//                            cellHeight - DOT_PADDING * 5);
+
                     // Цвет и фигура хода ИИ
                 } else if (field[y][x] == AI_DOT) {
                     g.setColor(Color.RED);
@@ -150,20 +154,35 @@ public class Map extends JPanel {
         if (isGameOver) showMessageGameOver(g);
     }
 
+    // Метот рисует крестик
+    private void drawCross(Graphics g, int x, int y) {
+        g.drawLine(x * cellWidth + DOT_PADDING, y * cellHeight + DOT_PADDING,
+                (x + 1) * cellWidth - DOT_PADDING, (y + 1) * cellHeight - DOT_PADDING);
+        g.drawLine(x * cellWidth + DOT_PADDING, (y + 1) * cellHeight - DOT_PADDING,
+                (x + 1) * cellWidth - DOT_PADDING, y * cellHeight + DOT_PADDING);
+    }
+
     private void showMessageGameOver(Graphics g) {
         g.setColor(Color.DARK_GRAY);
         g.fillRect(0, 200, getWidth(), 70);
-        g.setColor(Color.YELLOW);
-        g.setFont(new Font("Times new roman", Font.BOLD, 48));
+        g.setColor(Color.ORANGE);
+
+        if (gameOverType == STATE_WIN_AI) {
+            g.setFont(new Font("Times new roman", Font.BOLD, 48));
+        } else {
+            g.setFont(new Font("Times new roman", Font.BOLD, 48));
+        }
+
+        //
         switch (gameOverType) {
             case STATE_GAME:
-                g.drawString(MSG_DRAW, 180, getHeight() / 2);
+                g.drawString(MSG_DRAW, 170, getHeight() / 2);
                 break;
             case STATE_WIN_AI:
-                g.drawString(MSG_WIN_AI, 20, getHeight() / 2);
+                g.drawString(MSG_WIN_AI, 3, getHeight() / 2);
                 break;
             case STATE_WIN_HUMAN:
-                g.drawString(MSG_WIN_HUMAN, 70, getHeight() / 2);
+                g.drawString(MSG_WIN_HUMAN, 80, getHeight() / 2);
                 break;
             default:
                 throw new RuntimeException("Unexpected gameOver state " + gameOverType);
@@ -181,19 +200,22 @@ public class Map extends JPanel {
     }
 
     // Простая логика ИИ
-//    private void aiTurn() {
-//        int x, y;
-//        do {
-//            x = RANDOM.nextInt(fieldSizeX);
-//            y = RANDOM.nextInt(fieldSizeY);
-//        } while (!isEmptyCell(x, y));
-//        field[y][x] = AI_DOT;
-//    }
+    private void aiTurn() {
+        int x, y;
+        do {
+            x = RANDOM.nextInt(fieldSizeX);
+            y = RANDOM.nextInt(fieldSizeY);
+        } while (!isEmptyCell(x, y));
+        field[y][x] = AI_DOT;
+    }
 
     private boolean checkWin(char dot) {
         for (int i = 0; i < fieldSizeX; i++) {
             for (int j = 0; j < fieldSizeY; j++) {
-                if (checkLine(i, j, 1, 0, ))
+                if (checkLine(i, j, 1, 0, winLen, dot)) return true;
+                if (checkLine(i, j, 1, 1, winLen, dot)) return true;
+                if (checkLine(i, j, 0, 1, winLen, dot)) return true;
+                if (checkLine(i, j, 1, -1, winLen, dot)) return true;
             }
         }
 

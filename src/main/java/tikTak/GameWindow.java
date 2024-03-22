@@ -62,7 +62,7 @@ public class GameWindow extends JFrame {
     }
 
     // метод начала новой игры(вызывает окно настроек)
-    void startNewGame(int mode, int fSzX, int fSzY, int wLen) {
-        map.satrtNewGame(mode, fSzX, fSzY, wLen);
+    public void startNewGame(int mode, int fSzX, int fSzY, int wLen) {
+        map.startNewGame(mode, fSzX, fSzY, wLen);
     }
 }
